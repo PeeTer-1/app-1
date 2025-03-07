@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แก้ไขสินค้า - Marketplace</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <style>
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .image-preview {
+            max-width: 300px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px;
+        }
+        
+        .required {
+            color: #e74c3c;
+        }
+        
+        .help-text {
+            font-size: 14px;
+            color: #777;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Marketplace</h1>
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('home') }}">หน้าหลัก</a></li>
+                    {% if user_id %}
+                        <li><a href="{{ url_for('add_product') }}">เพิ่มสินค้า</a></li>
+                        <li><a href="{{ url_for('my_products') }}">สินค้าของฉัน</a></li>
+                        {% if not is_premium %}
+                            <li><a href="{{ url_for('upgrade_premium') }}">อัพเกรดเป็นพรีเมียม</a></li>
+                        {% endif %}
+                        <li><a href="{{ url_for('logout') }}">ออกจากระบบ</a></li>
+                    {% else %}
+                        <li><a href="{{ url_for('login') }}">เข้าสู่ระบบ</a></li>
+                        <li><a href="{{ url_for('register') }}">สมัครสมาชิก</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>
+    
+    <main class="container">
+        <h2>แก้ไขสินค้า</h2>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="form-container">
+            <form method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="name">ชื่อสินค้า <span class="required">*</span></label>
+                    <input type="text" id="name" name="name" value="{{ product.name }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="price">ราคา (บาท) <span class="required">*</span></label>
+                    <input type="number" id="price" name="price" value="{{ product.price }}" step="0.01" min="0" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="category">หมวดหมู่</label>
+                    <select id="category" name="category">
+                        <option value="">-- เลือกหมวดหมู่ --</option>
+                        <option value="electronics" {% if product.category == 'electronics' %}selected{% endif %}>อิเล็กทรอนิกส์</option>
+                        <option value="fashion" {% if product.category == 'fashion' %}selected{% endif %}>แฟชั่น</option>
+                        <option value="home" {% if product.category == 'home' %}selected{% endif %}>บ้านและสวน</option>
+                        <option value="beauty" {% if product.category == 'beauty' %}selected{% endif %}>ความงาม</option>
+                        <option value="sports" {% if product.category == 'sports' %}selected{% endif %}>กีฬาและกิจกรรมกลางแจ้ง</option>
+                        <option value="toys" {% if product.category == 'toys' %}selected{% endif %}>ของเล่นและเกม</option>
+                        <option value="books" {% if product.category == 'books' %}selected{% endif %}>หนังสือและนิตยสาร</option>
+                        <option value="others" {% if product.category == 'others' %}selected{% endif %}>อื่นๆ</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="condition">สภาพสินค้า</label>
+                    <select id="condition" name="condition">
+                        <option value="">-- เลือกสภาพ --</option>
+                        <option value="new" {% if product.condition == 'new' %}selected{% endif %}>ใหม่</option>
+                        <option value="like_new" {% if product.condition == 'like_new' %}selected{% endif %}>เหมือนใหม่</option>
+                        <option value="good" {% if product.condition == 'good' %}selected{% endif %}>ดี</option>
+                        <option value="fair" {% if product.condition == 'fair' %}selected{% endif %}>พอใช้</option>
+                        <option value="poor" {% if product.condition == 'poor' %}selected{% endif %}>ต้องซ่อมแซม</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="quantity">จำนวน</label>
+                    <input type="number" id="quantity" name="quantity" value="{{ product.quantity }}" min="1" step="1">
+                    <div class="help-text">หากไม่ระบุ จะตั้งค่าเริ่มต้นเป็น 1</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">รายละเอียดสินค้า</label>
+                    <textarea id="description" name="description">{{ product.description }}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="image">รูปภาพสินค้า</label>
+                    <input type="file" id="image" name="image" accept="image/*">
+                    <div class="help-text">รองรับไฟล์ .jpg, .jpeg, .png และ .gif (ขนาดไม่เกิน 16MB)</div>
+                    
+                    {% if product.image %}
+                        <div>
+                            <p>รูปภาพปัจจุบัน:</p>
+                            <img src="{{ url_for('static', filename='uploads/' + product.image) }}" alt="{{ product.name }}" class="image-preview">
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn-primary">บันทึกการแก้ไข</button>
+                </div>
+            </form>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Marketplace. สงวนลิขสิทธิ์.</p>
+        </div>
+    </footer>
+    
+    <script>
+        // Preview image before upload
+        document.getElementById('image').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                
+                reader.onload = function(event) {
+                    // Remove old preview if exists
+                    const oldPreview = document.querySelector('.image-preview-new');
+                    if (oldPreview) {
+                        oldPreview.remove();
+                    }
+                    
+                    // Create new preview
+                    const img = document.createElement('img');
+                    img.src = event.target.result;
+                    img.alt = 'รูปภาพตัวอย่าง';
+                    img.className = 'image-preview image-preview-new';
+                    
+                    // Add new preview after file input
+                    const fileInput = document.getElementById('image');
+                    fileInput.parentNode.insertBefore(img, fileInput.nextSibling);
+                }
+                
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

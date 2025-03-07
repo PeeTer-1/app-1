@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ - ตลาดออนไลน์</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <style>
+        .auth-container {
+            max-width: 400px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .auth-title {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+        
+        .d-flex {
+            display: flex;
+        }
+        
+        .justify-between {
+            justify-content: space-between;
+        }
+        
+        .align-center {
+            align-items: center;
+        }
+        
+        .auth-links {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        
+        .social-login {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        @media (max-width: 576px) {
+            .auth-container {
+                padding: 1.5rem;
+                margin: 1rem auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-container">
+            <div class="logo">
+                <a href="{{ url_for('home') }}">🛍️ ตลาดออนไลน์</a>
+            </div>
+            <button class="nav-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('home') }}"><i class="fas fa-home"></i> หน้าหลัก</a></li>
+                    <li><a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> สมัครสมาชิก</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="auth-container">
+                <h2 class="auth-title"><i class="fas fa-sign-in-alt"></i> เข้าสู่ระบบ</h2>
+                
+                <form method="POST" action="{{ url_for('login') }}">
+                    <div class="form-group">
+                        <label for="username" class="form-label">ชื่อผู้ใช้</label>
+                        <input type="text" id="username" name="username" class="form-control" placeholder="กรอกชื่อผู้ใช้ของคุณ" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password" class="form-label">รหัสผ่าน</label>
+                        <input type="password" id="password" name="password" class="form-control" placeholder="กรอกรหัสผ่านของคุณ" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fas fa-sign-in-alt"></i> เข้าสู่ระบบ
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="auth-links">
+                    <p>ยังไม่มีบัญชี? <a href="{{ url_for('register') }}">สมัครสมาชิก</a></p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>ตลาดออนไลน์</h3>
+                    <p>แหล่งซื้อขายสินค้าออนไลน์ที่ปลอดภัยและน่าเชื่อถือ</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-line"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>ลิงก์ด่วน</h3>
+                    <ul>
+                        <li><a href="{{ url_for('home') }}">หน้าหลัก</a></li>
+                        <li><a href="{{ url_for('login') }}">เข้าสู่ระบบ</a></li>
+                        <li><a href="{{ url_for('register') }}">สมัครสมาชิก</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>ช่วยเหลือ</h3>
+                    <ul>
+                        <li><a href="#">คำถามที่พบบ่อย</a></li>
+                        <li><a href="#">นโยบายความเป็นส่วนตัว</a></li>
+                        <li><a href="#">เงื่อนไขการใช้งาน</a></li>
+                        <li><a href="#">ติดต่อเรา</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                &copy; 2025 ตลาดออนไลน์ สงวนลิขสิทธิ์
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

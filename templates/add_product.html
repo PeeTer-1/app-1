@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เพิ่มสินค้าใหม่ - ตลาดออนไลน์</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <style>
+        .breadcrumb {
+            display: flex;
+            list-style: none;
+            padding: 0;
+            margin-bottom: 20px;
+        }
+        
+        .breadcrumb-item {
+            margin-right: 5px;
+        }
+        
+        .breadcrumb-item::after {
+            content: "/";
+            margin-left: 5px;
+        }
+        
+        .breadcrumb-item:last-child::after {
+            content: "";
+        }
+        
+        .breadcrumb-item.active {
+            color: #6c757d;
+        }
+        
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-right: -15px;
+            margin-left: -15px;
+        }
+        
+        .col-md-6 {
+            flex: 0 0 50%;
+            max-width: 50%;
+            padding-right: 15px;
+            padding-left: 15px;
+        }
+        
+        .category-tag {
+            display: inline-block;
+            padding: 5px 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .category-tag.selected {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        
+        .gap-2 {
+            gap: 8px;
+        }
+        
+        .gap-3 {
+            gap: 12px;
+        }
+        
+        .text-danger {
+            color: #e74c3c;
+        }
+        
+        .text-muted {
+            color: #6c757d;
+        }
+        
+        .ml-2 {
+            margin-left: 8px;
+        }
+        
+        .file-input-container {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        
+        .file-input {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+        
+        @media (max-width: 768px) {
+            .col-md-6 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-container">
+            <div class="logo">
+                <a href="{{ url_for('home') }}">🛍️ ตลาดออนไลน์</a>
+            </div>
+            <button class="nav-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('home') }}"><i class="fas fa-home"></i> หน้าหลัก</a></li>
+                    {% if session.get('user_id') %}
+                        <li><a href="{{ url_for('add_product') }}"><i class="fas fa-plus"></i> เพิ่มสินค้า</a></li>
+                        <li><a href="{{ url_for('my_products') }}"><i class="fas fa-box"></i> สินค้าของฉัน</a></li>
+                        {% if not is_premium %}
+                            <li><a href="{{ url_for('upgrade_premium') }}"><i class="fas fa-star"></i> อัพเกรดเป็นพรีเมียม</a></li>
+                        {% endif %}
+                        <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</a></li>
+                    {% else %}
+                        <li><a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> เข้าสู่ระบบ</a></li>
+                        <li><a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> สมัครสมาชิก</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('home') }}">หน้าหลัก</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('my_products') }}">สินค้าของฉัน</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">เพิ่มสินค้าใหม่</li>
+                </ol>
+            </nav>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2><i class="fas fa-plus-circle"></i> เพิ่มสินค้าใหม่</h2>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" id="product-form" class="product-form needs-validation">
+                        <div class="form-group">
+                            <label for="name" class="form-label">ชื่อสินค้า <span class="text-danger">*</span></label>
+                            <input type="text" id="name" name="name" class="form-control" placeholder="ระบุชื่อสินค้า" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="price" class="form-label">ราคา (บาท) <span class="text-danger">*</span></label>
+                            <input type="number" id="price" name="price" class="form-control" placeholder="ระบุราคาสินค้า" required min="0" step="0.01">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="description" class="form-label">รายละเอียดสินค้า</label>
+                            <textarea id="description" name="description" class="form-control" placeholder="อธิบายรายละเอียดสินค้า คุณสมบัติ ขนาด สี ฯลฯ" rows="5"></textarea>
+                            <small class="text-muted">รายละเอียดที่ครบถ้วนจะช่วยให้ลูกค้าตัดสินใจซื้อได้ง่ายขึ้น</small>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="category" class="form-label">หมวดหมู่สินค้า</label>
+                                    <select id="category" name="category" class="form-control">
+                                        <option value="">-- เลือกหมวดหมู่ --</option>
+                                        <option value="electronics">อิเล็กทรอนิกส์</option>
+                                        <option value="fashion">เสื้อผ้า</option>
+                                        <option value="home">บ้านและสวน</option>
+                                        <option value="beauty">ความงาม</option>
+                                        <option value="sports">กีฬา</option>
+                                        <option value="toys">ของเล่น</option>
+                                        <option value="books">หนังสือ</option>
+                                        <option value="others">อื่นๆ</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="condition" class="form-label">สภาพสินค้า</label>
+                                    <select id="condition" name="condition" class="form-control">
+                                        <option value="">-- เลือกสภาพ --</option>
+                                        <option value="new">สินค้าใหม่</option>
+                                        <option value="like_new">เหมือนใหม่</option>
+                                        <option value="good">สภาพดี</option>
+                                        <option value="fair">พอใช้</option>
+                                        <option value="poor">ต้องซ่อมแซม</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="quantity" class="form-label">จำนวนสินค้า</label>
+                            <input type="number" id="quantity" name="quantity" class="form-control" value="1" min="1">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="image" class="form-label">รูปภาพสินค้า</label>
+                            <input type="file" id="image" name="image" class="form-control" accept="image/*">
+                            <small class="text-muted">รองรับไฟล์ .jpg, .jpeg, .png และ .gif (ขนาดไม่เกิน 16MB)</small>
+                        </div>
+                        
+                        {% if is_premium %}
+                        <div class="card mb-3 premium-feature">
+                            <div class="card-body">
+                                <h3><i class="fas fa-star"></i> ตัวเลือกพิเศษสำหรับผู้ใช้พรีเมียม</h3>
+                                
+                                <div class="form-group">
+                                    <div class="d-flex">
+                                        <input type="checkbox" id="advertise_product" name="advertise_product" value="1">
+                                        <label for="advertise_product" class="ml-2">โฆษณาสินค้านี้ (แสดงเป็นสินค้าแนะนำ)</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h3><i class="fas fa-star"></i> สิทธิพิเศษสำหรับผู้ใช้พรีเมียม</h3>
+                                <p>อัพเกรดเป็นผู้ใช้พรีเมียมเพื่อเข้าถึงฟีเจอร์เพิ่มเติม:</p>
+                                <ul>
+                                    <li>โฆษณาสินค้าของคุณให้แสดงอันดับแรก</li>
+                                    <li>แสดงสินค้าของคุณในตำแหน่งยอดนิยม</li>
+                                    <li>ติดแท็กสินค้าแนะนำพิเศษ</li>
+                                    <li>วิเคราะห์ยอดขายและการเข้าชม</li>
+                                </ul>
+                                <a href="{{ url_for('upgrade_premium') }}" class="btn btn-accent">
+                                    <i class="fas fa-crown"></i> อัพเกรดเป็นพรีเมียม
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="form-group text-center">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-plus-circle"></i> เพิ่มสินค้า
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-lightbulb"></i> เคล็ดลับการขายสินค้าให้ได้ผลดี</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4><i class="fas fa-camera"></i> รูปภาพคุณภาพดี</h4>
+                            <p>ถ่ายรูปสินค้าในแสงธรรมชาติ หลายมุมมอง และใช้พื้นหลังสะอาด</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h4><i class="fas fa-align-left"></i> รายละเอียดครบถ้วน</h4>
+                            <p>ให้ข้อมูลสินค้าที่ครบถ้วน ชัดเจน รวมถึงขนาด วัสดุ และการดูแลรักษา</p>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <h4><i class="fas fa-tag"></i> ราคาที่เหมาะสม</h4>
+                            <p>ตั้งราคาที่แข่งขันได้ และพิจารณาโปรโมชันเพื่อดึงดูดลูกค้า</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h4><i class="fas fa-shipping-fast"></i> ข้อมูลการจัดส่ง</h4>
+                            <p>ระบุตัวเลือกการจัดส่งที่ชัดเจน พร้อมระยะเวลาและค่าใช้จ่าย</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>ตลาดออนไลน์</h3>
+                    <p>แหล่งซื้อขายสินค้าออนไลน์ที่ปลอดภัยและน่าเชื่อถือ</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-line"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>ลิงก์ด่วน</h3>
+                    <ul>
+                        <li><a href="{{ url_for('home') }}">หน้าหลัก</a></li>
+                        <li><a href="{{ url_for('my_products') }}">สินค้าของฉัน</a></li>
+                        <li><a href="{{ url_for('upgrade_premium') }}">อัพเกรดเป็นพรีเมียม</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>หมวดหมู่</h3>
+                    <ul>
+                        <li><a href="{{ url_for('home', category='electronics') }}">อิเล็กทรอนิกส์</a></li>
+                        <li><a href="{{ url_for('home', category='fashion') }}">เสื้อผ้า</a></li>
+                        <li><a href="{{ url_for('home', category='home') }}">เครื่องใช้ในบ้าน</a></li>
+                        <li><a href="{{ url_for('home', category='others') }}">อื่นๆ</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>ช่วยเหลือ</h3>
+                    <ul>
+                        <li><a href="#">คำถามที่พบบ่อย</a></li>
+                        <li><a href="#">นโยบายความเป็นส่วนตัว</a></li>
+                        <li><a href="#">เงื่อนไขการใช้งาน</a></li>
+                        <li><a href="#">ติดต่อเรา</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                &copy; 2025 ตลาดออนไลน์ สงวนลิขสิทธิ์
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // Preview image before upload
+        document.getElementById('image').addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Create preview image
+                    const preview = document.createElement('div');
+                    preview.innerHTML = `<img src="${e.target.result}" alt="ตัวอย่างรูปภาพ" style="max-width: 300px; max-height: 300px; margin-top: 10px; border-radius: 4px;">`;
+                    
+                    // Remove existing preview
+                    const existingPreview = document.querySelector('.image-preview-container');
+                    if (existingPreview) {
+                        existingPreview.remove();
+                    }
+                    
+                    // Add new preview
+                    preview.className = 'image-preview-container';
+                    const imageInput = document.getElementById('image');
+                    imageInput.parentNode.appendChild(preview);
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    </script>
+</body>
+</html>

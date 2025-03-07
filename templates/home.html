@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TERหน้าหลัก</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <style>
+        .product-img-placeholder {
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+            color: #6c757d;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-container">
+            <div class="logo">
+                <a href="{{ url_for('home') }}">🛍️ ตลาดออนไลน์</a>
+            </div>
+            <button class="nav-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('home') }}"><i class="fas fa-home"></i> หน้าหลัก</a></li>
+                    {% if session.get('user_id') %}
+                        <li><a href="{{ url_for('add_product') }}"><i class="fas fa-plus"></i> เพิ่มสินค้า</a></li>
+                        <li><a href="{{ url_for('my_products') }}"><i class="fas fa-box"></i> สินค้าของฉัน</a></li>
+                        {% if not session.get('is_premium') %}
+                            <li><a href="{{ url_for('upgrade_premium') }}"><i class="fas fa-star"></i> อัพเกรดเป็นพรีเมียม</a></li>
+                        {% endif %}
+                        <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</a></li>
+                    {% else %}
+                        <li><a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> เข้าสู่ระบบ</a></li>
+                        <li><a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> สมัครสมาชิก</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <section class="hero mb-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h1>ยินดีต้อนรับสู่ตลาดออนไลน์</h1>
+                        <p>แหล่งซื้อขายสินค้าออนไลน์ที่ปลอดภัยและน่าเชื่อถือ</p>
+                        
+                        <form id="search-form" class="search-form mt-3" action="{{ url_for('home') }}" method="GET">
+                            <div class="d-flex">
+                                <input type="text" id="search-input" name="search" class="form-control" placeholder="ค้นหาสินค้า..." value="{{ search_query }}">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i> ค้นหา
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <section class="recent-products">
+                <h2><i class="fas fa-box-open"></i> สินค้าทั้งหมด</h2>
+                {% if products %}
+                <div class="product-grid">
+                    {% for product in products %}
+                    <div class="card product-card">
+                        {% if product.image %}
+                            <img src="{{ url_for('static', filename='uploads/' + product.image) }}" alt="{{ product.name }}" class="product-img">
+                        {% else %}
+                            <div class="product-img-placeholder">
+                                <i class="fas fa-image fa-2x"></i>
+                            </div>
+                        {% endif %}
+                        <div class="product-info">
+                            <h3 class="product-title">{{ product.name }}</h3>
+                            <p class="product-price">฿{{ "{:,.2f}".format(product.price) }}</p>
+                            <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-primary btn-block mt-2">ดูรายละเอียด</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center">
+                    <p>ไม่พบสินค้า</p>
+                </div>
+                {% endif %}
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>ตลาดออนไลน์</h3>
+                    <p>แหล่งซื้อขายสินค้าออนไลน์ที่ปลอดภัยและน่าเชื่อถือ</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-line"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>ลิงก์ด่วน</h3>
+                    <ul>
+                        <li><a href="{{ url_for('home') }}">หน้าหลัก</a></li>
+                        <li><a href="{{ url_for('login') }}">เข้าสู่ระบบ</a></li>
+                        <li><a href="{{ url_for('register') }}">สมัครสมาชิก</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>หมวดหมู่</h3>
+                    <ul>
+                        <li><a href="{{ url_for('home', category='electronics') }}">อิเล็กทรอนิกส์</a></li>
+                        <li><a href="{{ url_for('home', category='fashion') }}">เสื้อผ้า</a></li>
+                        <li><a href="{{ url_for('home', category='home') }}">เครื่องใช้ในบ้าน</a></li>
+                        <li><a href="{{ url_for('home', category='others') }}">อื่นๆ</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>ช่วยเหลือ</h3>
+                    <ul>
+                        <li><a href="#">คำถามที่พบบ่อย</a></li>
+                        <li><a href="#">นโยบายความเป็นส่วนตัว</a></li>
+                        <li><a href="#">เงื่อนไขการใช้งาน</a></li>
+                        <li><a href="#">ติดต่อเรา</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                &copy; 2025 ตลาดออนไลน์ สงวนลิขสิทธิ์
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
