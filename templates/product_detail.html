@@ -112,7 +112,7 @@
             <div class="product-detail">
                 <div class="product-detail-images">
                     {% if product.image %}
-                        <img id="main-product-image" src="{{ url_for('static', filename='uploads/' + product.image) }}" alt="{{ product.name }}" class="product-detail-img zoomable">
+                        <img id="main-product-image" src="{{ url_for('static', filename='uploads/' + product.image) }}" alt="{{ product.name }}" class="product-detail-img">
                     {% else %}
                         <div class="product-img-placeholder">
                             <i class="fas fa-image fa-3x"></i>
